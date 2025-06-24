@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model User {
+  id               Int             @id @default(autoincrement())
+  username         String          @unique
+  password         String
+  name             String
+  telephone        String?
+  profileImage     String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  deletedAt        DateTime?
+  posts            Post[]
+  messages         Message[]       @relation("SentMessages")
+  receivedMessages Message[]       @relation("ReceivedMessages")
+  friends          FriendList[]    @relation("UserFriends")
+  friendOf         FriendList[]    @relation("FriendUsers")
+  sentRequests     FriendRequest[] @relation("SentRequests")
+  receivedRequests FriendRequest[] @relation("ReceivedRequests")
+  sessions         Session[]       @relation("FirstUser")
+  sessions2        Session[]       @relation("SecondUser")
+}
+
+model FriendRequest {
+  id         Int                 @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  deletedAt  DateTime?
+  status     FriendRequestStatus
+  sender     User                @relation("SentRequests", fields: [senderId], references: [id])
+  receiver   User                @relation("ReceivedRequests", fields: [receiverId], references: [id])
+}
+
+model FriendList {
+  id       Int  @id @default(autoincrement())
+  userId   Int
+  friendId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  user     User @relation("UserFriends", fields: [userId], references: [id])
+  friend   User @relation("FriendUsers", fields: [friendId], references: [id])
+}
+
+model Session {
+  id              Int       @id @default(autoincrement())
+  firstUser       Int
+  secondUser      Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  sessionId       String    @unique
+  user1           User      @relation("FirstUser", fields: [firstUser], references: [id])
+  user2           User      @relation("SecondUser", fields: [secondUser], references: [id])
+  sessionMessages Message[] @relation("SessionMessage")
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  sessionId  Int
+  senderId   Int
+  receiverId Int
+  content    String
+  timestamp  DateTime @default(now())
+  session    Session  @relation("SessionMessage", fields: [sessionId], references: [id])
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model Post {
+  id       Int    @id @default(autoincrement())
+  title    String
+  content  String
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+}
+
+model Employee {
+  id        Int     @id @default(autoincrement())
+  name      String
+  email     String
+  password  String
+  telephone String?
+  role      Role
+}
+
+model Product {
+  id          Int    @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  stock       Int
+}
