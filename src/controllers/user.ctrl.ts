@@ -39,14 +39,6 @@ export const UserCtrl = {
 	getUser: async (ctx: any) => {
 		let user = await db.user.findUnique({
 			where: {
-				OR: [
-					{
-						name: 'complete'
-					},
-					{
-						name: 'incomplete'
-					}
-				],
 				id: ctx.params.userId
 			},
 			include: {
